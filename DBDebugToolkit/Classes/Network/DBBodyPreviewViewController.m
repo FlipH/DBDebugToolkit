@@ -21,6 +21,7 @@
 // THE SOFTWARE.
 
 #import "DBBodyPreviewViewController.h"
+#import "DBJsonViewer/DBJsonViewerMainViewController.h"
 
 typedef NS_ENUM(NSUInteger, DBBodyPreviewViewControllerViewState) {
     DBBodyPreviewViewControllerViewStateLoading,
@@ -33,6 +34,7 @@ typedef NS_ENUM(NSUInteger, DBBodyPreviewViewControllerViewState) {
 @property (weak, nonatomic) IBOutlet UIActivityIndicatorView *activityIndicator;
 @property (weak, nonatomic) IBOutlet UITextView *textView;
 @property (weak, nonatomic) IBOutlet UIImageView *imageView;
+@property (strong, nonatomic) id json;
 
 @end
 
@@ -60,6 +62,7 @@ typedef NS_ENUM(NSUInteger, DBBodyPreviewViewControllerViewState) {
                 if (error) {
                     dataString = @"Unable to read the data.";
                 } else {
+                    self.json = jsonSerialization;
                     data = [NSJSONSerialization dataWithJSONObject:jsonSerialization options:NSJSONWritingPrettyPrinted error:nil];
                     dataString = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
                     dataString = [dataString stringByReplacingOccurrencesOfString:@"\\/" withString:@"/"];
@@ -89,6 +92,17 @@ typedef NS_ENUM(NSUInteger, DBBodyPreviewViewControllerViewState) {
 }
 
 - (void)setViewState:(DBBodyPreviewViewControllerViewState)state animated:(BOOL)animated {
+    if (state == DBBodyPreviewViewControllerViewStateShowingText && self.json) {
+        UIBarButtonItem *jsonViewerBtn = [[UIBarButtonItem alloc] initWithTitle:@"Json Viewer"
+                                                                          style:UIBarButtonItemStylePlain
+                                                                         target:self
+                                                                         action:@selector(jsonViewerButtonDidTap)];
+
+        self.navigationItem.rightBarButtonItem = jsonViewerBtn;
+    } else {
+        self.navigationItem.rightBarButtonItem = nil;
+    }
+
     [UIView animateWithDuration:animated ? 0.35 : 0.0 animations:^{
         self.activityIndicator.alpha = 0.0;
         self.textView.alpha = 0.0;
@@ -99,9 +113,10 @@ typedef NS_ENUM(NSUInteger, DBBodyPreviewViewControllerViewState) {
                 self.activityIndicator.alpha = 1.0;
                 break;
             }
-            case DBBodyPreviewViewControllerViewStateShowingText:
+            case DBBodyPreviewViewControllerViewStateShowingText: {
                 self.textView.alpha = 1.0;
                 break;
+            }
             case DBBodyPreviewViewControllerViewStateShowingImage:
                 self.imageView.alpha = 1.0;
         }
@@ -110,6 +125,13 @@ typedef NS_ENUM(NSUInteger, DBBodyPreviewViewControllerViewState) {
             [self.activityIndicator stopAnimating];
         }
     }];
+}
+
+- (void)jsonViewerButtonDidTap {
+    if (!self.json) return;
+
+    DBJsonViewerMainViewController *jsonViewerVc = [DBJsonViewerMainViewController jsonViewerWithJson:self.json];
+    [self showViewController:jsonViewerVc sender:nil];
 }
 
 @end
