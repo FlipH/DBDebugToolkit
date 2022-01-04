@@ -126,13 +126,12 @@ static const NSInteger DBRequestModelMaxFilenameLeangth = 255;
 }
 
 - (NSString *)urlStringByTrimingUrlLastComponent:(NSURL *)url toMaxLength:(NSInteger)maxLength {
-    NSRange lastComponentRange = [url.absoluteString rangeOfString:url.lastPathComponent];
-    NSString *fileName = [url.absoluteString substringFromIndex:lastComponentRange.location];
-    if([fileName length] > maxLength) {
-        fileName = [fileName substringToIndex:maxLength];
+    NSString *lastPathComponent = url.lastPathComponent;
+    if([lastPathComponent length] > maxLength) {
+        lastPathComponent = [lastPathComponent substringToIndex:maxLength];
     }
 
-    return [[[url absoluteString] substringToIndex:lastComponentRange.location] stringByAppendingPathComponent:fileName];
+    return [[[url absoluteString] stringByDeletingLastPathComponent] stringByAppendingPathComponent:lastPathComponent];
 }
 
 - (NSString *)urlStringForFileSave:(NSURL *)url timestamp:(NSDate *)timestamp {
